@@ -88,7 +88,7 @@ int main(void)
 		{ 0, 1, 0, 0, 1, 0, 1, 0, 0, 0 },
 		{ 0, 1, 0, 1, 1, 0, 1, 0, 0, 0 },
 		{ 0, 0, 0, 1, 1, 0, 1, 0, 0, 0 },
-		{ 0, 1, 1, 1, 1, 0, 1, 0, 0, 0 },
+		{ 0, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
 		{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
 	};
 	
@@ -167,15 +167,9 @@ int main(void)
 			pChild->pParent = pCurrent;
 		}
 
-		//没路可走，退出
-		if (open.empty())
-		{
-			break;
-		}
-
 		//3 找出buff中 f最小的点  走  删掉
 		vector<treeNode *>::iterator itMin;
-		do
+		while (!open.empty())
 		{
 			itMin = open.begin();//假设第一个最小
 			for (vector<treeNode *>::iterator it = ++open.begin(); it != open.end(); ++it)
@@ -185,7 +179,8 @@ int main(void)
 					itMin = it;
 				}
 			}
-		
+			
+
 			if (pathMap[(*itMin)->pos.row][(*itMin)->pos.col] == true)
 			{
 				//如果该点已被走过则找下一个未找过的点
@@ -198,7 +193,13 @@ int main(void)
 				break;
 			}
 			
-		} while (!open.empty());
+		}
+
+		//没路可走，退出
+		if (open.empty())
+		{
+			break;
+		}
 		
 		//走
 		pCurrent = *itMin;//更新
@@ -220,31 +221,30 @@ int main(void)
 		}
 	}
 
-	//输出路径 
-	while (pCurrent)
-	{
-		GOTO_XY(pCurrent->pos.col * 2,pCurrent->pos.row);
-		cout << "●";
-		pCurrent = pCurrent->pParent;
-	}
-
-	GOTO_XY(0,ROWS);
-
 	if (isFindEnd)
 	{
+		//输出路径 
+		while (pCurrent)
+		{
+			GOTO_XY(pCurrent->pos.col * 2, pCurrent->pos.row);
+			cout << "●";
+			pCurrent = pCurrent->pParent;
+		}
+
+		GOTO_XY(0, ROWS);
 		cout << "找到终点了!                 " << endl;
 	}
 	else
 	{
+		GOTO_XY(0, ROWS);
 		cout << "无法找到终点!               " << endl;
 	}
 
-
-	for (vector<treeNode *>::iterator it = ++open.begin(); it != open.end(); ++it)
+	for (vector<treeNode *>::iterator it = open.begin(); it != open.end(); ++it)
 	{
 		delete *it;//释放内存
 	}
-	for (vector<treeNode *>::iterator it = ++close.begin(); it != close.end(); ++it)
+	for (vector<treeNode *>::iterator it = close.begin(); it != close.end(); ++it)
 	{
 		delete *it;//释放内存
 	}

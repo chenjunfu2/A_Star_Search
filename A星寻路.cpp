@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <conio.h>
 #include <Windows.h>
 using namespace std;
 
@@ -21,18 +22,24 @@ struct MyPoint
 };
 
 //上下左右
-enum dir
+struct
 {
-	p_up,
-	p_down,
-	p_left,
-	p_right,
-	p_lup,
-	p_ldown,
-	p_rup,
-	p_rdown
-};
+	int rowM;//y
+	int colM;//x
+	int DJ;//代价
+}
+PosMove[8] =
+{
+	{-1,0,ZXDJ},//上
+	{1,0,ZXDJ},//下
+	{0,-1,ZXDJ},//左
+	{0,1,ZXDJ},//右
 
+	{-1,-1,XXDJ},//左上
+	{-1,1,XXDJ},//右上
+	{1,-1,XXDJ},//左下
+	{1,1,XXDJ},//右下
+};
 
 //树节点类型
 struct treeNode
@@ -59,6 +66,7 @@ int main(void)
 {
 	//控制台句柄
 	HANDLE ConsoleHAND = GetStdHandle(STD_OUTPUT_HANDLE);
+#define GOTO_XY(X,Y) (SetConsoleCursorPosition(ConsoleHAND, COORD{(short)(X),(short)(Y)}))
 
 	//隐藏光标
 	CONSOLE_CURSOR_INFO cursor_info = {1, false};
@@ -68,14 +76,10 @@ int main(void)
 	MyPoint begPos = {1, 1};
 	MyPoint endPos = {9, 9};
 
-	//二维数组记录是否走过
-	// 0 false 表示没有走过  1 true 走过
-	bool pathMap[ROWS][COLS] = {0};//所有的点都是0 都没有走过
-	//标记起点走过
-	pathMap[begPos.row][begPos.col] = true;
 
 	//二维数组描述地图
-	int map[ROWS][COLS] = {//0表示路  1表示障碍
+	int map[ROWS][COLS] = //0表示路  1表示障碍
+	{
 		{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
 		{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
 		{ 0, 1, 0, 1, 1, 1, 1, 0, 0, 0 },
@@ -89,7 +93,7 @@ int main(void)
 	};
 	
 	//输出地图
-	SetConsoleCursorPosition(ConsoleHAND, COORD{0,0});
+	GOTO_XY(0, 0);
 	for (int y = 0; y < ROWS; ++y)
 	{
 		for (int x = 0; x < COLS; ++x)
@@ -98,80 +102,40 @@ int main(void)
 		}
 		cout << endl;
 	}
-	
 
-	//输出路径 看一看
-	for (int y = 0; y < ROWS; ++y)
-	{
-		for (int x = 0; x < COLS; ++x)
-		{
-			if (pathMap[y][x])
-			{
-				SetConsoleCursorPosition(ConsoleHAND, COORD{(short)x * 2,(short)y});
-				cout << "○";
-			}
+	//二维数组记录是否走过
+	// 0 false 表示没有走过  1 true 走过
+	bool pathMap[ROWS][COLS] = {0};//所有的点都是0 都没有走过
 
-		}
-		cout << endl;
-	}
+	//标记起点走过
+	pathMap[begPos.row][begPos.col] = true;
+	//输出路径
+	GOTO_XY(begPos.col * 2, begPos.col);
+	cout << "○";
 
+	GOTO_XY(0, ROWS);
 	system("pause");
 
 	//创建一颗树
 	treeNode *pRoot = new treeNode(begPos);//起点入树
-
 	//准备一个数组  用来找最小的f
-	vector<treeNode *> buff;
+	vector<treeNode *> open;
+	vector<treeNode *> close;
 	//当前点
 	treeNode *pCurrent = pRoot;
-	treeNode *pChild = NULL;
-
+	//是否找到
 	bool isFindEnd = false;
+
 	while (true)
 	{
 		//1 把八点都做出来
-		for (int i = p_up; i < p_rdown; ++i)
+		for (int i = 0; i < 8; ++i)
 		{
-			pChild = new treeNode(pCurrent->pos);
-			switch (i)
-			{
-			case p_up:
-				pChild->pos.row--;
-				pChild->pos.g += ZXDJ;
-				break;
-			case p_down:
-				pChild->pos.row++;
-				pChild->pos.g += ZXDJ;
-				break;
-			case p_left:
-				pChild->pos.col--;
-				pChild->pos.g += ZXDJ;
-				break;
-			case p_right:
-				pChild->pos.col++;
-				pChild->pos.g += ZXDJ;
-				break;
-			case p_lup:
-				pChild->pos.col--;
-				pChild->pos.row--;
-				pChild->pos.g += XXDJ;
-				break;
-			case p_rup:
-				pChild->pos.col++;
-				pChild->pos.row--;
-				pChild->pos.g += XXDJ;
-				break;
-			case p_ldown:
-				pChild->pos.col--;
-				pChild->pos.row++;
-				pChild->pos.g += XXDJ;
-				break;
-			case p_rdown:
-				pChild->pos.col++;
-				pChild->pos.row++;
-				pChild->pos.g += XXDJ;
-				break;
-			}
+			treeNode *pChild = new treeNode(pCurrent->pos);
+
+			pChild->pos.row += PosMove[i].rowM;
+			pChild->pos.col += PosMove[i].colM;
+			pChild->pos.g += PosMove[i].DJ;
 
 			//边界判断
 			if (pChild->pos.row < 0 || pChild->pos.row >= ROWS ||
@@ -197,15 +161,14 @@ int main(void)
 			//2 算出来h 和f值 放到树里 放到buff里
 			pChild->pos.f = pChild->pos.g + getH(pChild->pos, endPos);
 			//放到buff里
-			buff.push_back(pChild);
+			open.push_back(pChild);
 			//入树
 			pCurrent->child.push_back(pChild);
 			pChild->pParent = pCurrent;
 		}
 
-
 		//没路可走，退出
-		if (buff.empty())
+		if (open.empty())
 		{
 			break;
 		}
@@ -214,42 +177,39 @@ int main(void)
 		vector<treeNode *>::iterator itMin;
 		do
 		{
-			itMin = buff.begin();//假设第一个最小
-			for (vector<treeNode *>::iterator it = ++buff.begin(); it != buff.end(); ++it)
+			itMin = open.begin();//假设第一个最小
+			for (vector<treeNode *>::iterator it = ++open.begin(); it != open.end(); ++it)
 			{//遍历整个buff数组
 				if ((*it)->pos.f < (*itMin)->pos.f)
 				{
 					itMin = it;
 				}
 			}
-
-			if (pathMap[(*itMin)->pos.row][(*itMin)->pos.col] == false)//如果该点未走过，则走
+		
+			if (pathMap[(*itMin)->pos.row][(*itMin)->pos.col] == true)
 			{
+				//如果该点已被走过则找下一个未找过的点
+				close.push_back(*itMin);
+				open.erase(itMin);//删掉
+			}
+			else
+			{
+				//如果该点未走过，则退出循环找
 				break;
 			}
-
-			//如果该点已被走过则找下一个未找过的点
-			buff.erase(itMin);//删掉
-		} while (!buff.empty());
+			
+		} while (!open.empty());
 		
 		//走
-		pCurrent = *itMin;
-		pathMap[pCurrent->pos.row][pCurrent->pos.col] = true;
+		pCurrent = *itMin;//更新
 
-		//输出路径 看一看
-		for (int y = 0; y < ROWS; ++y)
-		{
-			for (int x = 0; x < COLS; ++x)
-			{
-				if (pathMap[y][x])
-				{
-					SetConsoleCursorPosition(ConsoleHAND, COORD{(short)x * 2,(short)y});
-					cout << "○";
-				}
-
-			}
-			cout << endl;
-		}
+		close.push_back(*itMin);//放入
+		open.erase(itMin);//删掉
+		pathMap[pCurrent->pos.row][pCurrent->pos.col] = true;//走过
+		
+		//输出路径
+		GOTO_XY(pCurrent->pos.col * 2, pCurrent->pos.row);
+		cout << "○";
 		Sleep(20);
 
 		//4 如果找到了终点 循环结束
@@ -263,12 +223,12 @@ int main(void)
 	//输出路径 
 	while (pCurrent)
 	{
-		SetConsoleCursorPosition(ConsoleHAND, COORD{(short)pCurrent->pos.col * 2,(short)pCurrent->pos.row});
+		GOTO_XY(pCurrent->pos.col * 2,pCurrent->pos.row);
 		cout << "●";
 		pCurrent = pCurrent->pParent;
 	}
 
-	SetConsoleCursorPosition(ConsoleHAND, COORD{(short)0,(short)ROWS});
+	GOTO_XY(0,ROWS);
 
 	if (isFindEnd)
 	{
@@ -277,6 +237,16 @@ int main(void)
 	else
 	{
 		cout << "无法找到终点!               " << endl;
+	}
+
+
+	for (vector<treeNode *>::iterator it = ++open.begin(); it != open.end(); ++it)
+	{
+		delete *it;//释放内存
+	}
+	for (vector<treeNode *>::iterator it = ++close.begin(); it != close.end(); ++it)
+	{
+		delete *it;//释放内存
 	}
 
 	system("pause");

@@ -46,7 +46,7 @@ struct treeNode
 {
 	MyPoint	pos;
 	treeNode *pParent = NULL;
-	vector<treeNode *>	child;
+	//vector<treeNode *>	child;
 
 	treeNode(void) = default;
 	treeNode(const MyPoint &p) :pos(p) {}
@@ -62,6 +62,30 @@ inline int getH(const MyPoint &pos, const MyPoint &end)
 	return (abs(end.col - pos.col) + abs(end.row - pos.row)) * ZXDJ;
 }
 
+
+
+//起点与终点
+MyPoint begPos = {9, 9};
+MyPoint endPos = {0, 0};
+
+
+//二维数组描述地图
+int map[ROWS][COLS] = //0表示路  1表示障碍
+{
+	{ 0, 1, 0, 0, 0, 1, 1, 0, 0, 1 },
+	{ 0, 0, 0, 1, 0, 0, 1, 0, 1, 0 },
+	{ 0, 1, 0, 1, 1, 1, 1, 0, 1, 0 },
+	{ 0, 1, 0, 0, 1, 0, 0, 1, 0, 0 },
+	{ 0, 1, 1, 0, 1, 0, 1, 1, 0, 1 },
+	{ 0, 1, 0, 0, 1, 0, 1, 0, 1, 1 },
+	{ 0, 1, 0, 1, 1, 0, 1, 1, 0, 1 },
+	{ 0, 0, 0, 1, 1, 0, 1, 1, 0, 1 },
+	{ 0, 1, 1, 1, 1, 0, 1, 0, 1, 1 },
+	{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
+};
+
+
+
 int main(void)
 {
 	//控制台句柄
@@ -71,26 +95,6 @@ int main(void)
 	//隐藏光标
 	CONSOLE_CURSOR_INFO cursor_info = {1, false};
 	SetConsoleCursorInfo(ConsoleHAND, &cursor_info);
-
-	//起点与终点
-	MyPoint begPos = {1, 1};
-	MyPoint endPos = {9, 9};
-
-
-	//二维数组描述地图
-	int map[ROWS][COLS] = //0表示路  1表示障碍
-	{
-		{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
-		{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
-		{ 0, 1, 0, 1, 1, 1, 1, 0, 0, 0 },
-		{ 0, 1, 0, 0, 1, 0, 0, 0, 0, 0 },
-		{ 0, 1, 1, 0, 1, 0, 1, 0, 0, 0 },
-		{ 0, 1, 0, 0, 1, 0, 1, 0, 0, 0 },
-		{ 0, 1, 0, 1, 1, 0, 1, 0, 0, 0 },
-		{ 0, 0, 0, 1, 1, 0, 1, 0, 0, 0 },
-		{ 0, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
-		{ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
-	};
 	
 	//输出地图
 	GOTO_XY(0, 0);
@@ -123,13 +127,14 @@ int main(void)
 	vector<treeNode *> close;
 	//当前点
 	treeNode *pCurrent = pRoot;
+	close.push_back(pRoot);
 	//是否找到
 	bool isFindEnd = false;
 
 	while (true)
 	{
 		//1 把八点都做出来
-		for (int i = 0; i < 8; ++i)
+		for (int i = 0; i < 8; ++i)//8改成4就能只走直线
 		{
 			treeNode *pChild = new treeNode(pCurrent->pos);
 
@@ -163,7 +168,7 @@ int main(void)
 			//放到buff里
 			open.push_back(pChild);
 			//入树
-			pCurrent->child.push_back(pChild);
+			//pCurrent->child.push_back(pChild);
 			pChild->pParent = pCurrent;
 		}
 
@@ -204,7 +209,7 @@ int main(void)
 		//走
 		pCurrent = *itMin;//更新
 
-		close.push_back(*itMin);//放入
+		close.push_back(*itMin);//放入 
 		open.erase(itMin);//删掉
 		pathMap[pCurrent->pos.row][pCurrent->pos.col] = true;//走过
 		
@@ -253,4 +258,3 @@ int main(void)
 
 	return 0;
 }
-

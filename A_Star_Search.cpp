@@ -7,7 +7,7 @@
 struct A_StarTree
 {
 	A_StarNode Node = {0};
-	A_StarTree *pParent = NULL;
+	A_StarTree *pParent = nullptr;
 };
 
 //排序用的比较函数
@@ -35,13 +35,13 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 
 	CalculatH pfuncCalculatH,//计算当前点到目标点距离的预估函数
 	SearchCallBack pfuncCurrentSearch,//获取当前走的点
-	void *pSearchCallBackValue)//用户自定义参数（CurrentSearch函数使用）
+	void *pCurrentSearchValue)//用户自定义参数（CurrentSearch函数使用）
 {
 	//检查
-	if (pMap == NULL ||
+	if (pMap == nullptr ||
 		lMapHigh == 0 ||
 		lMapWide == 0 ||
-		pfuncCalculatH == NULL)
+		pfuncCalculatH == nullptr)
 	{
 		return -2;//参数错误
 	}
@@ -56,7 +56,7 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 
 	//创建和拷贝地图
 	bool *bPathMap = new(std::nothrow) bool[(size_t)lMapHigh * (size_t)lMapWide];
-	if (bPathMap == NULL)
+	if (bPathMap == nullptr)
 	{
 		return -1;//内存不足
 	}
@@ -65,10 +65,10 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 
 	//创建起点树
 	A_StarTree *pRootNode = new(std::nothrow) A_StarTree{stSource};
-	if (pRootNode == NULL)
+	if (pRootNode == nullptr)
 	{
 		delete[] bPathMap;
-		bPathMap = NULL;
+		bPathMap = nullptr;
 		return -1;//内存不足
 	}
 
@@ -83,9 +83,9 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 	bPathMap[lMapWide * pCurrentNode->Node.y + pCurrentNode->Node.x] = true;
 
 	//调用节点信息回调函数
-	if (pfuncCurrentSearch != NULL)
+	if (pfuncCurrentSearch != nullptr)
 	{
-		pfuncCurrentSearch(pCurrentNode->Node, pSearchCallBackValue);
+		pfuncCurrentSearch(pCurrentNode->Node, pCurrentSearchValue);
 	}
 
 	//上下左右变换
@@ -117,7 +117,7 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 		{
 			//初始化一个新子节点
 			A_StarTree *pChildNode = new(std::nothrow) A_StarTree{pCurrentNode->Node};
-			if (pChildNode == NULL)
+			if (pChildNode == nullptr)
 			{
 				lRetVal = -1;
 				goto RESOURCE_RECOVERY;//跳出到最外层循环外清理资源
@@ -133,7 +133,7 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 				pChildNode->Node.y < 0 || pChildNode->Node.y >= lMapHigh)//超出边界
 			{
 				delete pChildNode;
-				pChildNode = NULL;
+				pChildNode = nullptr;
 				continue;
 			}
 
@@ -141,7 +141,7 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 			if (bPathMap[lMapWide * pChildNode->Node.y + pChildNode->Node.x] == true)//走过了
 			{
 				delete pChildNode;
-				pChildNode = NULL;
+				pChildNode = nullptr;
 				continue;
 			}
 
@@ -154,7 +154,7 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 		}
 
 		//f值最小节点
-		A_StarTree *pMinNode = NULL;
+		A_StarTree *pMinNode = nullptr;
 
 		//找到一个没走过的f值最小的节点
 		while (!OpenList.empty())
@@ -189,9 +189,9 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 		bPathMap[lMapWide * pCurrentNode->Node.y + pCurrentNode->Node.x] = true;
 
 		//调用节点信息回调函数
-		if (pfuncCurrentSearch != NULL)
+		if (pfuncCurrentSearch != nullptr)
 		{
-			pfuncCurrentSearch(pCurrentNode->Node, pSearchCallBackValue);
+			pfuncCurrentSearch(pCurrentNode->Node, pCurrentSearchValue);
 		}
 
 		//如果到终点，结束
@@ -217,7 +217,7 @@ long A_Star_Search(//找到返回1，否则返回0，返回-1为内存不足，返回-2为参数错误
 RESOURCE_RECOVERY:
 	//回收地图拷贝
 	delete[] bPathMap;
-	bPathMap = NULL;
+	bPathMap = nullptr;
 
 	//回收未走过列表剩余元素
 	while (!OpenList.empty())
